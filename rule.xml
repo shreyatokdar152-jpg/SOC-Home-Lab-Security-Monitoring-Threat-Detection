@@ -1,0 +1,36 @@
+<!--
+  Custom rule: Suspicious PowerShell execution detection
+  File:  local_rules.xml
+  Path:  /var/ossec/etc/rules/local_rules.xml
+  Author: <your name>
+  MITRE ATT&CK: T1059.001 - Command and Scripting Interpreter: PowerShell
+
+  Requires PowerShell Script Block Logging (Event ID 4104) enabled via GPO
+  on the monitored Windows endpoint. Matches on encoded-command usage
+  and execution-policy bypass, common defense-evasion indicators.
+-->
+<group name="local,windows,powershell,">
+
+  <rule id="100020" level="12">
+    <if_group>windows</if_group>
+    <field name="win.system.eventID">^4104$</field>
+    <regex type="pcre2">(?i)(\-enc(odedcommand)?\b|\-ep\s+bypass|\-executionpolicy\s+bypass)</regex>
+    <description>Suspicious PowerShell execution: encoded command or execution-policy bypass detected</description>
+    <mitre>
+      <id>T1059.001</id>
+    </mitre>
+    <group>powershell,defense_evasion,gdpr_IV_35.7.d,nist_800_53_SI.4,tsc_CC6.1,tsc_CC7.2,</group>
+  </rule>
+
+  <rule id="100021" level="12">
+    <if_sid>100020</if_sid>
+    <regex type="pcre2">(?i)(invoke-expression|\biex\b).{0,80}(downloadstring|net\.webclient|invoke-webrequest)</regex>
+    <description>Suspicious PowerShell execution: possible fileless download-and-execute (IEX + web download)</description>
+    <mitre>
+      <id>T1059.001</id>
+      <id>T1105</id>
+    </mitre>
+    <group>powershell,defense_evasion,command_and_control,</group>
+  </rule>
+
+</group>
